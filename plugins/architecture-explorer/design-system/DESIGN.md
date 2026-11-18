@@ -15,7 +15,9 @@ The explorer is a working tool for reading a system, not a poster. Everything be
 
 ## Colour
 
-Dark is the default theme. Light applies when the viewer's Claude theme is set to light (`:root[data-theme="light"]`). Every colour is a token defined in both.
+Dark is the default theme. Every colour is a token defined in both dark and light.
+
+The page decides which theme to show in this order: the viewer's pick from the Light/Dark button in the header, then their Claude theme if they set one, then their system setting. A small script at the top of the page sets `data-mode` on the root element before anything is drawn, and the light tokens live under `:root[data-mode="light"]`. The pick is remembered in the viewer's browser only. Picking the theme the page would show anyway clears the pick, so the page goes back to following Claude and the system.
 
 ### Surfaces and text
 

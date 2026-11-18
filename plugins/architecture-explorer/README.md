@@ -24,6 +24,10 @@ These are from a map of ScaleUp Flow, a NEXLOR product.
 
 ![Overview of ScaleUp Flow as 14 building blocks in three columns](../../docs/screenshots/architecture-explorer/overview.png)
 
+**Light and dark**: the page follows the viewer's Claude theme or system setting, and the button at the top right switches between the two.
+
+![The same overview in the light theme](../../docs/screenshots/architecture-explorer/overview-light.png)
+
 **Complete**: every component and relationship.
 
 ![Complete view with all 60 components and the flows that can be traced](../../docs/screenshots/architecture-explorer/complete.png)

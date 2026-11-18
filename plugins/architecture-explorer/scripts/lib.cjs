@@ -19,8 +19,9 @@ function extractData(html) {
   catch (e) { throw new Error('The data block is not plain JSON (' + e.message + '). Pages built before this plugin cannot be extracted.'); }
 }
 
+/** The page's scripts, joined in page order (the theme script, then the main one). */
 function pageScript(html) {
-  return html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>'));
+  return [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).join('\n');
 }
 
 function pageStyle(html) {
@@ -39,13 +40,17 @@ function stubEl() {
  * `sample` stands in for Claude so the chat can be exercised without a real call. Resolves with whatever `body` returns.
  */
 function runPage(html, body, sample) {
-  const els = {};
-  const document = { querySelector(s) { return els[s] || (els[s] = stubEl()); }, querySelectorAll() { return []; }, addEventListener() {} };
+  const els = {}, rootAttrs = {};
+  // The root element keeps its attributes, so the theme the page sets on it can be read back.
+  const documentElement = Object.assign(stubEl(), { setAttribute(k, v) { rootAttrs[k] = String(v); }, getAttribute(k) { return k in rootAttrs ? rootAttrs[k] : null; } });
+  const document = { documentElement, querySelector(s) { return els[s] || (els[s] = stubEl()); }, querySelectorAll() { return []; }, addEventListener() {} };
   const win = { addEventListener() {} };
   if (sample) win.claude = { use: async n => (n === 'sample' ? sample : null) };
-  const fn = new Function('document', 'window', 'matchMedia', 'getSelection', 'navigator',
+  // The page gets its own empty storage, so it never reaches Node's.
+  const store = {}, localStorage = { getItem: k => (k in store ? store[k] : null), setItem(k, v) { store[k] = String(v); }, removeItem(k) { delete store[k]; } };
+  const fn = new Function('document', 'window', 'matchMedia', 'getSelection', 'navigator', 'localStorage',
     'return (async()=>{' + pageScript(html) + '\n' + body + '\n})()');
-  return fn(document, win, () => ({ matches: false }), () => ({}), {});
+  return fn(document, win, () => ({ matches: false }), () => ({}), {}, localStorage);
 }
 
 module.exports = { TEMPLATE, readData, extractData, pageScript, pageStyle, runPage };

@@ -127,6 +127,16 @@ async function body() {
   }
   setView('over');
 
+  // ---- theme switch ----
+  must(typeof themeToggle === 'function', 'the page has no theme switch; rebuild it with build.cjs');
+  const root = document.documentElement, mode = () => root.getAttribute('data-mode');
+  must(mode() === 'dark', 'the theme should start dark when nothing asks for light, found ' + mode());
+  themeToggle(); must(mode() === 'light' && themePick === 'light' && $('#theme').innerHTML.includes('Dark'), 'switching to light');
+  themeToggle(); must(mode() === 'dark' && themePick === null, 'switching back should clear the pick');
+  root.setAttribute('data-theme', 'light'); themeApply(); must(mode() === 'light', 'the page should follow a light Claude theme');
+  themeToggle(); must(mode() === 'dark' && themePick === 'dark', 'a pick should win over the Claude theme');
+  themeToggle(); root.setAttribute('data-theme', ''); themeApply(); must(mode() === 'dark' && themePick === null, 'theme did not reset');
+
   // ---- chat, with a stand-in for Claude ----
   await null; await null; await null;
   must(chat.ask, 'chat is not wired to Claude');

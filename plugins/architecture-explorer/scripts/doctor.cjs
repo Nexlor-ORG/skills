@@ -30,7 +30,7 @@ try {
   const css = pageStyle(template);
   const block = (start) => { const i = css.indexOf(start); return i < 0 ? '' : css.slice(i, css.indexOf('}', i)); };
   const read = text => Object.fromEntries([...text.matchAll(/(--[a-z0-9-]+):\s*([^;]+);/g)].map(m => [m[1], m[2].trim()]));
-  const dark = read(block(':root{')), light = read(block(':root[data-theme="light"]{'));
+  const dark = read(block(':root{')), light = read(block(':root[data-mode="light"]{'));
   const drift = [];
   for (const [name, t] of Object.entries(tokens.color)) {
     if (dark[name] !== t.dark) drift.push(name + ' dark');

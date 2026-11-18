@@ -34,7 +34,7 @@ async function body() {
 const src = body.toString();
 
 runPage(html, src.slice(src.indexOf('{') + 1, src.lastIndexOf('}')), fake).then(({ shots, chat }) => {
-  const bg = light ? '#ffffff' : '#121724', theme = light ? ' data-theme="light"' : '', written = [];
+  const bg = light ? '#ffffff' : '#121724', theme = light ? ' data-mode="light"' : '', written = [];
   for (const [k, s] of Object.entries(shots)) {
     // Quick Look thumbnails are square, so each still is padded out to a square.
     const p = 30, side = Math.max(Math.ceil(s.w + p * 2), Math.ceil(s.h + p * 2));

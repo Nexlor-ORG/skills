@@ -26,7 +26,7 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}`. If that text appears unexpanded, the root 
 
 ## Rules
 
-1. **Tokens, not values.** Colours come from the CSS custom properties on `:root`. Never write a literal colour in a component rule. A new colour is a new token, defined for dark on `:root` and for light under `:root[data-theme="light"]`, and added to `tokens.json`.
+1. **Tokens, not values.** Colours come from the CSS custom properties on `:root`. Never write a literal colour in a component rule. A new colour is a new token, defined for dark on `:root` and for light under `:root[data-mode="light"]`, and added to `tokens.json`.
 2. **Colour means kind.** Each component kind and step type has one colour, used the same way in every view. Do not reuse a kind colour for decoration.
 3. **One accent.** `--accent` marks the active tab, the selected block and highlighted overview lines. Nothing else.
 4. **Both themes.** Dark is the default; light must be designed, not inverted. Check both.
