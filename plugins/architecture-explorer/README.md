@@ -16,6 +16,32 @@ The page has six linked views and a chat:
 
 The result is published as a private Claude Artifact, or left as a single local HTML file where publishing is not available.
 
+## Screenshots
+
+These are from a map of ScaleUp Flow, a NEXLOR product.
+
+**Overview**: the system as a few large blocks.
+
+![Overview of ScaleUp Flow as 14 building blocks in three columns](../../docs/screenshots/architecture-explorer/overview.png)
+
+**Complete**: every component and relationship.
+
+![Complete view with all 60 components and the flows that can be traced](../../docs/screenshots/architecture-explorer/complete.png)
+
+**Features & Functions**: what the product does, then one capability traced down to its functions and the architecture behind them.
+
+![Features view listing 16 features grouped by domain](../../docs/screenshots/architecture-explorer/features.png)
+
+![One capability of the Strategy Builder traced to its functions and components](../../docs/screenshots/architecture-explorer/feature-detail.png)
+
+**User Journeys**: one journey with its decision and error branches.
+
+![The journey for building and committing a strategy, step by step](../../docs/screenshots/architecture-explorer/user-journey.png)
+
+**Ask Claude**: the chat panel with its starter questions.
+
+![Ask Claude chat panel open over the overview](../../docs/screenshots/architecture-explorer/ask-claude.png)
+
 ## Using it
 
 Say what you want in plain words:

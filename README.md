@@ -6,6 +6,10 @@ Claude plugins and skills maintained by NEXLOR. Each plugin lives in its own fol
 |---|---|
 | [architecture-explorer](plugins/architecture-explorer) | Scans a code repository read-only and builds an interactive architecture map with an Ask Claude chat |
 
+![Architecture Explorer overview of ScaleUp Flow, a NEXLOR product](docs/screenshots/architecture-explorer/overview.png)
+
+More screenshots are in the [plugin README](plugins/architecture-explorer#screenshots).
+
 ## Installing in Claude Code
 
 This repository is a public plugin marketplace, so anyone can add it.
