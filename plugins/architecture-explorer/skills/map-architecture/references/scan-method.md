@@ -15,7 +15,22 @@ Work from the outside in, then from the product down. Record a `path:line` for e
 9. **Roles.** Role enums, permission checks, guards, policies. A role that exists in code has `basis: "role"`. A kind of person the product clearly serves but the code does not name (a visitor, a customer with no account) is `basis: "persona"`.
 10. **Features.** Product areas a user or operator would name. Not folders. For each: capabilities (what it lets someone do) and the functions that implement each capability, with the real function name and where it lives.
 11. **Journeys.** For each role, the end-to-end paths that matter: first use, the core loop, AI-assisted work, collaboration, admin, billing, recovery from errors. Trace each from the route through guards and handlers. Every decision and error branch must point at the condition in code that causes it.
-12. **Overview.** Last, group every component into 8 to 16 blocks in three columns: what people and timers use, the system's own backend, outside services.
+12. **Overview.** Group every component into 8 to 16 blocks in three columns: what people and timers use, the system's own backend, outside services.
+13. **Tech stack.** Read the package manifests, build and lint configuration, hosting configuration, database configuration and the import lines of server functions. One item per technology that matters, with the version exactly as declared, the file that proves it, and the components that use it. Confirm a dependency is imported before listing it; if it is declared but unused, say so in its note.
+14. **Security review.** Last, with the whole map in mind, read for security. Cover sign-in and sessions; authorization and tenant isolation (database policies in their final state after all migrations, privileged functions, how roles and admin are decided on the server); each API endpoint and webhook (who may call it, signature checks, what a caller can name); payments; AI handling (what reaches a prompt, what the output can do, limits); secrets and configuration (names and locations only); the browser app (unsafe rendering, redirects, headers, storage); third-party scripts and privacy; logging; dependencies as declared. Record controls that are in place as well as findings.
+
+## Security levels
+
+| Level | Use for |
+|---|---|
+| `critical` | Cross-tenant data access or account takeover that is clearly reachable |
+| `high` | A real authorization or integrity gap reachable by an ordinary signed-in user or an outsider |
+| `medium` | A weakness that needs another condition, or with limited reach |
+| `low` | Hardening, such as most missing headers |
+| `info` | Worth knowing, no direct risk |
+| `ok` | A control that is in place and worth showing |
+
+Before recording a finding at medium or above, re-read the cited lines and try to disprove it: a later migration, a check earlier in the function, a trigger, framework escaping. Downgrade or drop what does not survive. Anything that depends on a setting outside the repository is `needs-check` and at most `medium`. The review never runs code, queries a database, calls a deployed service or runs an audit tool; say in `scope` and `notCovered` what that leaves unjudged.
 
 ## Certainty
 
@@ -54,4 +69,5 @@ Use the three notes lists (`notes`, `featureNotes`, `journeyNotes`) for what the
 - Every component, function, role and step has a source reference that you opened.
 - No value from the "nothing sensitive" list is in any description.
 - Each journey's main path reads as a story from first step to a success step.
+- Each tech stack version matches the cited line, and each security finding at medium or above was re-read and survived an attempt to disprove it.
 - Each overview link is backed by at least one relationship between components of the two blocks (the validator enforces this both ways).

@@ -127,6 +127,27 @@ async function body() {
   }
   setView('over');
 
+  // ---- tech stack and security review (only when the map has them) ----
+  [['tech', TS, TECH, techById, o => o.name], ['sec', SR, SECI, secById, o => o.title]].forEach(([v, section, list, by, title]) => {
+    must(VIEW_OFF.has(v) === !section, v + ' tab should show only when the map has that section');
+    if (!section) return;
+    setView(v); chk(v + ' home');
+    must(X.items.length === list.length, v + ': expected ' + list.length + ' cards, drew ' + X.items.length);
+    [...$('#filters').innerHTML.matchAll(/data-xf="([^"]+)"/g)].forEach(m => { nav(T0({ xf: m[1] })); chk(v + ' filter ' + m[1]); });
+    setView(v);
+    list.forEach(o => { xPick(o.id); chk(v + ' ' + o.id); must(state.xsel && state.xsel.id === o.id && panel.innerHTML.includes(esc(title(o))), v + ' panel for ' + o.id); n++; });
+    xPick(list[0].id); xPick(list[0].id); must(!state.xsel, v + ': picking a selected card should clear it');
+    state.q = title(list[0]).toLowerCase().slice(0, 6); xEnter(); must(state.xsel, v + ' search then Enter'); resetX();
+    const linked = list.find(o => o.nodes.length);
+    if (linked) {
+      setView('over'); nav(T0({ [v]: linked.id })); must(state.view === v && state.xsel.id === linked.id && backs.length === 1, 'link into ' + v);
+      goArch(linked.nodes[0]); must(panel.innerHTML.includes('data-' + v + '="' + linked.id + '"'), 'component panel should link back to ' + linked.id);
+      popBack(); must(state.view === v && state.xsel.id === linked.id, 'Back should return to ' + v); popBack(); backs.length = 0;
+    }
+    must(refChip(list[0].id).includes('data-' + v + '='), 'chat link for ' + v);
+  });
+  setView('over');
+
   // ---- theme switch ----
   must(typeof themeToggle === 'function', 'the page has no theme switch; rebuild it with build.cjs');
   const root = document.documentElement, mode = () => root.getAttribute('data-mode');
@@ -152,7 +173,7 @@ async function body() {
   must(call.opts.cache === false && call.opts.signal instanceof AbortSignal && typeof call.opts.onText === 'function', 'chat request options');
   const bytes = Buffer.byteLength(call.input.map(t => t.content).join(''));
   must(bytes < 215000, 'the map text sent to Claude is ' + bytes + ' bytes; the limit is 262144 and the chat needs headroom. Shorten descriptions.');
-  [...N.map(x => x.id), ...OB.map(b => b.id), ...FEATS.map(f => f.id), ...Object.keys(subById), ...Object.keys(fnById), ...JOURS.map(j => j.id), ...Object.keys(stepById), ...ROLES.map(r => r.id)]
+  [...N.map(x => x.id), ...OB.map(b => b.id), ...FEATS.map(f => f.id), ...Object.keys(subById), ...Object.keys(fnById), ...JOURS.map(j => j.id), ...Object.keys(stepById), ...ROLES.map(r => r.id), ...TECH.map(t => t.id), ...SECI.map(o => o.id)]
     .forEach(id => must(chat.digest.includes(id), 'the text sent to Claude leaves out ' + id));
   const dm = /undefined|NaN|\[object/.exec(chat.digest);
   must(!dm, 'the text sent to Claude contains "' + (dm && dm[0]) + '" near: ' + (dm ? chat.digest.slice(Math.max(0, dm.index - 150), dm.index + 40) : ''));

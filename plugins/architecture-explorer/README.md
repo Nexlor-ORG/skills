@@ -2,7 +2,7 @@
 
 A Claude plugin that reads a code repository without changing it and builds one interactive page explaining the system.
 
-The page has six linked views and a chat:
+The page has eight linked views and a chat:
 
 | View | Shows |
 |---|---|
@@ -12,6 +12,8 @@ The page has six linked views and a chat:
 | Business | Everything except the AI machinery |
 | Features & Functions | What the product does, down to the function and file behind each capability |
 | User Journeys | How each kind of user gets something done, step by step, with decision and error branches |
+| Tech Stack | Every technology the system is built with, grouped by layer, with its declared version, what it does here and the components that use it |
+| Security Review | Controls that are in place and findings by level, each with the evidence in code, why it matters and a recommended fix |
 | Ask Claude | A chat that answers from the map and links its answers back into the views |
 
 The result is published as a private Claude Artifact, or left as a single local HTML file where publishing is not available.
@@ -41,6 +43,12 @@ These are from a map of ScaleUp Flow, a NEXLOR product.
 **User Journeys**: one journey with its decision and error branches.
 
 ![The journey for building and committing a strategy, step by step](../../docs/screenshots/architecture-explorer/user-journey.png)
+
+**Tech Stack** and **Security Review**: shown here on Lumen Desk, the made-up sample map that ships with the plugin. A real security review belongs to the system's owner and stays in their private map.
+
+![Tech Stack view with one technology selected](../../docs/screenshots/architecture-explorer/tech-stack.png)
+
+![Security Review view with one finding selected](../../docs/screenshots/architecture-explorer/security-review.png)
 
 **Ask Claude**: the chat panel with its starter questions.
 
@@ -83,6 +91,8 @@ The scan is read-only. It never runs the repository's code, installs anything, r
 The Ask Claude chat sends the map's text and the viewer's question to Claude on the viewer's own account. Nothing else leaves the page.
 
 ## Limits
+
+- The security review is a static, read-only read of the code made while mapping it. It is not a penetration test, it runs no vulnerability scan, and it cannot see settings held outside the repository.
 
 - A map holds at most 60 components and 120 relationships; larger systems are grouped.
 - The map is a reading of the code at one point in time. Anything marked inferred or documented was not traced.

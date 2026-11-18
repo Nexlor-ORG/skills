@@ -19,6 +19,8 @@ Source references are repo-relative paths with an optional line: `src/App.tsx:42
 | `features` | yes | at least one |
 | `userJourneys` | yes | at least one |
 | `overview` | yes | see below |
+| `techStack` | no | see below; without it the page has no Tech Stack tab. New scans should include it |
+| `securityReview` | no | see below; without it the page has no Security Review tab. New scans should include it |
 | `topIntegrations` | no | display names for the Integrations list; defaults to the external components |
 | `chat` | no | `{ "starters": [up to 4 questions, 70 characters each] }` shown in the empty chat |
 | `stats` | no | do not write it; `build.cjs` derives it |
@@ -175,3 +177,49 @@ Rules: the first step is on the main path; every step is reachable from it; a `d
 - `name`: at most 30 characters. `d`: at most three lines of 48 characters.
 - Every component belongs to exactly one block.
 - `links`: one per pair of blocks whose components are related, no more and no fewer. `a` and `b` in either order. The label says what passes between them.
+
+## Tech stack: `techStack`
+
+```json
+{
+  "summary": "Two plain sentences describing the stack as a whole.",
+  "groups": [{ "id": "frontend", "name": "Frontend" }],
+  "items": [{
+    "id": "tech-react", "name": "React", "group": "frontend", "version": "^18.3.1", "role": "UI library",
+    "d": "What it does in this system.", "src": "package.json:23", "refs": ["src/main.tsx:1"], "nodes": ["e-shell"],
+    "note": "Optional: declared but never imported, two versions in use, pinned by URL."
+  }],
+  "notes": ["Limits of the inventory, one sentence each."]
+}
+```
+
+- `groups`: 2 to 9 layers in reading order (for example languages and runtime, frontend, backend and data, AI, payments, email, hosting, build and quality). Each needs at least one item. Each is drawn as a row of cards.
+- `id`: starts with `tech-`. `name`: at most 26 characters. `role`: at most 30, a noun phrase. `d`: at most 240.
+- `version`: exactly as the cited file declares it (keep `^` or `~`), at most 18 characters. Leave it out when the repository declares none, as for a hosted service.
+- `src`: the file and line that proves it, such as its line in the package manifest. `refs`: up to three places it is used.
+- `nodes`: the components that use it. Empty for project-wide tooling.
+- Leave out type packages and tiny utilities. Aim for 12 to 40 items.
+
+## Security review: `securityReview`
+
+```json
+{
+  "summary": "Two plain sentences: what is sound and where the main gaps are.",
+  "scope": "What was reviewed and how, and that it is a static read of the code, not a penetration test.",
+  "date": "2026-01-15",
+  "areas": [{ "id": "access", "name": "Access control" }],
+  "items": [{
+    "id": "sec-plan-change-role", "area": "access", "title": "Plan changes do not re-check the role", "level": "high",
+    "d": "What was found.", "impact": "Why it matters.", "fix": "The concrete change to make.",
+    "src": "apps/api/src/billing/service.ts:40", "refs": [], "nodes": ["s-billing"], "confidence": "confirmed"
+  }],
+  "notCovered": ["What the review could not judge from the repository, one sentence each."]
+}
+```
+
+- `areas`: 2 to 9, each with at least one item. Each is drawn as a row of cards, most serious first.
+- `level`: `ok` for a control that is in place, or a finding at `info`, `low`, `medium`, `high` or `critical`. See `scan-method.md` for the scale. Record strengths as well as findings.
+- `confidence`: `confirmed` (the code path was read end to end) or `needs-check` (it depends on something outside the repository; say what in `d`). `high` and `critical` must be `confirmed`.
+- `id`: starts with `sec-`. `title`: at most 44 characters and states the fact. `d`: at most 320. `impact`: at most 220. `fix`: at most 260. Findings need `impact` and `fix`; controls leave them out.
+- `src`: the single best file and line. `refs`: up to four more. `nodes`: the components concerned.
+- Never a secret value, an email address or exploit steps. Name the kind of secret and where it is.

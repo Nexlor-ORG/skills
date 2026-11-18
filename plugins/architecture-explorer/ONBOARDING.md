@@ -32,6 +32,8 @@ Then go deeper with the other tabs:
 - **AI** and **Business** are the same map, filtered.
 - **Features & Functions** starts from what the product does and drills down to the function behind each capability.
 - **User Journeys** follows each kind of user through a task, including the branches where things go wrong.
+- **Tech Stack** lists what the system is built with, layer by layer, with versions and the file that declares each one.
+- **Security Review** shows which protections are in place and what was found, most serious first, each with the evidence in code and a recommended fix. It is a static read of the code, not a penetration test.
 
 Three things to know:
 

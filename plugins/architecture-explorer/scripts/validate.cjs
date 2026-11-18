@@ -136,9 +136,38 @@ bad([...real].filter(k => !drawn.has(k)).map(k => 'missing ' + k).concat([...dra
 const wrapN = (s, n) => { let c = '', k = 0; String(s).split(' ').forEach(w => { if (c && (c + ' ' + w).length > n) { k++; c = w; } else c = c ? c + ' ' + w : w; }); return k + (c ? 1 : 0); };
 bad(OB.filter(b => wrapN(b.d, 48) > 3).map(b => b.id + ':' + wrapN(b.d, 48) + ' lines'), 'overview descriptions fit three lines of 48 characters');
 
+// ---- tech stack and security review (optional sections: a map without them simply has no such tab) ----
+const TS = A.techStack, SR = A.securityReview;
+const techItems = TS ? arr(TS.items) : [], secItems = SR ? arr(SR.items) : [];
+const len = v => String(v === undefined ? '' : v).length;
+if (TS) {
+  const g = arr(TS.groups), gid = new Set(g.map(x => x.id));
+  ok(typeof TS.summary === 'string' && TS.summary.length > 0 && g.length >= 2 && g.length <= 9 && g.every(x => x.id && x.name), 'tech stack has a summary and 2 to 9 layers with id and name');
+  bad(techItems.filter(t => !(t.id && t.name && t.role && t.d && t.src && gid.has(t.group))).map(t => t.id || '(no id)'), 'tech stack items have id, name, role, d, src and an existing layer');
+  bad(techItems.filter(t => len(t.name) > 26 || len(t.role) > 30 || len(t.d) > 240 || (t.version !== undefined && (typeof t.version !== 'string' || !t.version || t.version.length > 18))).map(t => t.id),
+    'tech stack text fits: name 26, role 30, d 240, version 18');
+  bad(g.filter(x => !techItems.some(t => t.group === x.id)).map(x => x.id), 'every tech stack layer has an item');
+  bad(techItems.flatMap(t => arr(t.nodes).filter(n => !set.has(n)).map(n => t.id + '>' + n)), 'tech stack items reference existing components');
+  ok(TS.notes === undefined || (Array.isArray(TS.notes) && TS.notes.every(x => typeof x === 'string')), 'tech stack notes are a list of sentences');
+  warn(techItems.length < 8 ? ['only ' + techItems.length] : [], 'tech stack lists at least 8 technologies');
+}
+if (SR) {
+  const a = arr(SR.areas), aid = new Set(a.map(x => x.id)), levels = ['critical', 'high', 'medium', 'low', 'info', 'ok'];
+  ok(!!SR.summary && !!SR.scope && a.length >= 2 && a.length <= 9 && a.every(x => x.id && x.name), 'security review has a summary, a scope statement and 2 to 9 areas with id and name');
+  bad(secItems.filter(o => !(o.id && o.title && o.d && o.src && aid.has(o.area) && levels.includes(o.level) && [undefined, 'confirmed', 'needs-check'].includes(o.confidence))).map(o => o.id || '(no id)'),
+    'security items have id, title, d, src, an existing area, a level and a confidence');
+  bad(secItems.filter(o => o.level !== 'ok' && !(o.impact && o.fix)).map(o => o.id), 'security findings say why they matter and how to fix them');
+  bad(secItems.filter(o => len(o.title) > 44 || len(o.d) > 320 || len(o.impact) > 220 || len(o.fix) > 260).map(o => o.id), 'security text fits: title 44, d 320, impact 220, fix 260');
+  bad(secItems.filter(o => ['critical', 'high'].includes(o.level) && o.confidence === 'needs-check').map(o => o.id), 'high and critical findings are confirmed in code, not "needs-check"');
+  bad(a.filter(x => !secItems.some(o => o.area === x.id)).map(x => x.id), 'every security area has an item');
+  bad(secItems.flatMap(o => arr(o.nodes).filter(n => !set.has(n)).map(n => o.id + '>' + n)), 'security items reference existing components');
+  ok(SR.notCovered === undefined || (Array.isArray(SR.notCovered) && SR.notCovered.every(x => typeof x === 'string')), 'security "not covered" is a list of sentences');
+  warn(secItems.length && secItems.every(o => o.level !== 'ok') ? ['no controls recorded'] : [], 'security review records controls that are in place, not only findings');
+}
+
 // ---- ids ----
-const everything = [...ids, ...OB.map(b => b.id), ...F.map(f => f.id), ...subs.map(s => s.id), ...fns.map(f => f.id), ...J.map(j => j.id), ...J.flatMap(j => arr(j.steps).map(s => s.id))];
-bad(everything.filter((k, i, a) => a.indexOf(k) !== i), 'ids unique across components, blocks, features, capabilities, functions, journeys and steps');
+const everything = [...ids, ...OB.map(b => b.id), ...F.map(f => f.id), ...subs.map(s => s.id), ...fns.map(f => f.id), ...J.map(j => j.id), ...J.flatMap(j => arr(j.steps).map(s => s.id)), ...techItems.map(t => t.id), ...secItems.map(o => o.id)];
+bad(everything.filter((k, i, a) => a.indexOf(k) !== i), 'ids unique across components, blocks, features, capabilities, functions, journeys, steps, technologies and security items');
 bad([...everything, ...R.map(r => r.id)].filter(k => !/^[A-Za-z0-9_-]+$/.test(String(k)) || String(k).startsWith('arch')), 'ids use only letters, digits, - and _ (and do not start with "arch")');
 warn(R.map(r => r.id).filter(k => everything.includes(k)), 'role ids differ from every other id');
 if (A.chat) ok(Array.isArray(A.chat.starters) && A.chat.starters.length <= 4 && A.chat.starters.every(q => typeof q === 'string' && q.length <= 70), 'chat starters: up to 4 questions of at most 70 characters');
@@ -151,6 +180,7 @@ if (repo) {
   fns.forEach(f => refs.push([f.id, f.src, f.name]));
   R.forEach(r => arr(r.src).forEach(x => refs.push([r.id, x])));
   J.forEach(j => arr(j.steps).forEach(s => refs.push([s.id, s.src])));
+  [...techItems, ...secItems].forEach(o => [o.src, ...arr(o.refs)].forEach(r => refs.push([o.id, r])));
   const cache = {}, missing = [], range = [], far = [];
   refs.forEach(([id, ref, name]) => {
     const m = /^(.*?)(?::(\d+))?$/.exec(String(ref)), target = path.resolve(repo, m[1]);
@@ -178,5 +208,6 @@ const secret = /(price_[A-Za-z0-9]{8,}|sk_(live|test)_|pk_(live|test)_|rk_(live|
 const sm = text.match(secret);
 ok(!sm, 'no keys, tokens, price ids or email addresses in the map' + (sm ? ' -> ' + sm[0].slice(0, 24) : ''));
 
-console.log(`components=${N.length} relationships=${E.length} blocks=${OB.length} features=${F.length} capabilities=${subs.length} functions=${fns.length} roles=${R.length} journeys=${J.length} steps=${J.reduce((n, j) => n + arr(j.steps).length, 0)}`);
+console.log(`components=${N.length} relationships=${E.length} blocks=${OB.length} features=${F.length} capabilities=${subs.length} functions=${fns.length} roles=${R.length} journeys=${J.length} steps=${J.reduce((n, j) => n + arr(j.steps).length, 0)}` +
+  (TS ? ` technologies=${techItems.length}` : '') + (SR ? ` security=${secItems.length} (${secItems.filter(o => o.level !== 'ok').length} findings)` : ''));
 finish();

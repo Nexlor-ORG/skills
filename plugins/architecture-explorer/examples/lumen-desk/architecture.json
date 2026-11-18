@@ -289,5 +289,375 @@
    {"a": "ov-api", "b": "ov-pay", "label": "Opens checkout and receives payment events."},
    {"a": "ov-api", "b": "ov-mail", "label": "Sends replies and digests."}
   ]
+ },
+ "techStack": {
+  "summary": "A TypeScript codebase end to end: two browser apps, one Node API with a job queue, Postgres and Redis for data, and three outside services for AI, payments and email.",
+  "groups": [
+   {
+    "id": "lang",
+    "name": "Languages and runtime"
+   },
+   {
+    "id": "apps",
+    "name": "Browser apps"
+   },
+   {
+    "id": "api",
+    "name": "API and jobs"
+   },
+   {
+    "id": "data",
+    "name": "Data"
+   },
+   {
+    "id": "services",
+    "name": "AI and outside services"
+   },
+   {
+    "id": "tooling",
+    "name": "Build and quality"
+   }
+  ],
+  "items": [
+   {
+    "id": "tech-typescript",
+    "name": "TypeScript",
+    "group": "lang",
+    "version": "^5.4.0",
+    "role": "Language",
+    "d": "Every app and the API are written in TypeScript with strict mode on.",
+    "src": "package.json:21",
+    "nodes": []
+   },
+   {
+    "id": "tech-node",
+    "name": "Node.js",
+    "group": "lang",
+    "version": ">=20",
+    "role": "Server runtime",
+    "d": "Runs the API, the webhook receiver and the scheduled jobs.",
+    "src": "package.json:6",
+    "nodes": [
+     "s-tickets",
+     "s-auth",
+     "c-digest"
+    ]
+   },
+   {
+    "id": "tech-react",
+    "name": "React",
+    "group": "apps",
+    "version": "^18.3.0",
+    "role": "UI library",
+    "d": "Renders the agent inbox, sign-in and billing pages.",
+    "src": "apps/web/package.json:14",
+    "nodes": [
+     "e-inbox",
+     "e-signin",
+     "e-billing"
+    ]
+   },
+   {
+    "id": "tech-preact",
+    "name": "Preact",
+    "group": "apps",
+    "version": "^10.20.0",
+    "role": "Widget UI library",
+    "d": "Renders the help widget, chosen to keep the script customers embed small.",
+    "src": "apps/widget/package.json:9",
+    "nodes": [
+     "e-widget"
+    ],
+    "note": "The widget and the web app share no UI components."
+   },
+   {
+    "id": "tech-fastify",
+    "name": "Fastify",
+    "group": "api",
+    "version": "^4.26.0",
+    "role": "HTTP server",
+    "d": "Serves every API route and the payment webhook.",
+    "src": "apps/api/package.json:12",
+    "nodes": [
+     "s-auth",
+     "s-tickets",
+     "s-reply",
+     "s-billing",
+     "e-wh-pay"
+    ]
+   },
+   {
+    "id": "tech-bullmq",
+    "name": "BullMQ",
+    "group": "api",
+    "version": "^5.4.0",
+    "role": "Job queue",
+    "d": "Queues outgoing email and runs the daily digest on a schedule.",
+    "src": "apps/api/package.json:15",
+    "nodes": [
+     "s-notify",
+     "c-digest"
+    ]
+   },
+   {
+    "id": "tech-postgres",
+    "name": "PostgreSQL",
+    "group": "data",
+    "role": "Database",
+    "d": "Holds accounts, tickets and help articles. Schema changes are plain SQL migrations.",
+    "src": "db/migrations/0001_accounts.sql",
+    "nodes": [
+     "d-accounts",
+     "d-tickets",
+     "d-articles"
+    ]
+   },
+   {
+    "id": "tech-redis",
+    "name": "Redis",
+    "group": "data",
+    "role": "Queue and session store",
+    "d": "Backs the job queue and stores signed-in sessions.",
+    "src": "apps/api/src/notify/queue.ts:15",
+    "refs": [
+     "apps/api/src/auth/session.ts:31"
+    ],
+    "nodes": [
+     "s-notify",
+     "s-auth"
+    ]
+   },
+   {
+    "id": "tech-anthropic-sdk",
+    "name": "Anthropic SDK",
+    "group": "services",
+    "version": "^0.30.0",
+    "role": "Model client",
+    "d": "Sends prompts for reply drafts and ticket triage and reads the answers.",
+    "src": "apps/api/package.json:18",
+    "refs": [
+     "apps/api/src/ai/client.ts:11"
+    ],
+    "nodes": [
+     "m-main",
+     "a-suggest",
+     "a-triage",
+     "x-llm"
+    ]
+   },
+   {
+    "id": "tech-payments",
+    "name": "Payment provider API",
+    "group": "services",
+    "role": "Billing",
+    "d": "Opens checkout for plan changes and sends payment events to the webhook.",
+    "src": "apps/api/src/billing/provider.ts:6",
+    "nodes": [
+     "x-pay",
+     "s-billing",
+     "e-wh-pay"
+    ]
+   },
+   {
+    "id": "tech-email",
+    "name": "Email provider API",
+    "group": "services",
+    "role": "Transactional email",
+    "d": "Delivers agent replies and the daily digest.",
+    "src": "apps/api/src/notify/provider.ts:6",
+    "nodes": [
+     "x-mail",
+     "s-notify"
+    ]
+   },
+   {
+    "id": "tech-vite",
+    "name": "Vite",
+    "group": "tooling",
+    "version": "^5.2.0",
+    "role": "Build tool",
+    "d": "Builds both browser apps.",
+    "src": "apps/web/package.json:22",
+    "nodes": []
+   },
+   {
+    "id": "tech-vitest",
+    "name": "Vitest",
+    "group": "tooling",
+    "version": "^1.5.0",
+    "role": "Test runner",
+    "d": "Runs unit tests for the API services.",
+    "src": "package.json:24",
+    "nodes": []
+   }
+  ],
+  "notes": [
+   "Versions are shown as the package files declare them, not as resolved by the lockfile.",
+   "Hosted service plans and regions are not visible in the repository."
+  ]
+ },
+ "securityReview": {
+  "summary": "Sign-in, tenant scoping and the payment webhook are handled soundly. The main gaps are one missing role check on plan changes and no rate limit on the public widget endpoint.",
+  "scope": "A static, read-only review of the code in this repository, made while mapping it. It is not a penetration test and no running system was touched. Each item cites the file it is based on; items marked as needing a check depend on settings outside the repository.",
+  "date": "2026-01-15",
+  "areas": [
+   {
+    "id": "auth",
+    "name": "Sign-in and sessions"
+   },
+   {
+    "id": "access",
+    "name": "Access control"
+   },
+   {
+    "id": "api",
+    "name": "API and webhooks"
+   },
+   {
+    "id": "ai",
+    "name": "AI handling"
+   },
+   {
+    "id": "data",
+    "name": "Data and privacy"
+   }
+  ],
+  "items": [
+   {
+    "id": "sec-session-cookies",
+    "area": "auth",
+    "title": "Sessions use HTTP-only, signed cookies",
+    "level": "ok",
+    "d": "The session service sets the cookie as HTTP-only, secure and same-site, and stores the session server-side.",
+    "src": "apps/api/src/auth/session.ts:31",
+    "nodes": [
+     "s-auth",
+     "e-signin"
+    ],
+    "confidence": "confirmed"
+   },
+   {
+    "id": "sec-ticket-scope",
+    "area": "access",
+    "title": "Ticket queries are scoped to the account",
+    "level": "ok",
+    "d": "Every ticket query adds the signed-in agent's account id on the server, so one team cannot read another team's tickets.",
+    "src": "apps/api/src/tickets/service.ts:22",
+    "nodes": [
+     "s-tickets",
+     "d-tickets"
+    ],
+    "confidence": "confirmed"
+   },
+   {
+    "id": "sec-plan-change-role",
+    "area": "access",
+    "title": "Plan changes do not re-check the role",
+    "level": "high",
+    "d": "The billing page hides the upgrade button from agents, but the API route that opens checkout only checks that the caller is signed in.",
+    "impact": "Any agent could start a plan change for their team by calling the route directly.",
+    "fix": "Check the admin role in the billing service before opening checkout, and add a test for an agent caller.",
+    "src": "apps/api/src/billing/service.ts:40",
+    "nodes": [
+     "s-billing",
+     "e-billing"
+    ],
+    "confidence": "confirmed"
+   },
+   {
+    "id": "sec-webhook-signature",
+    "area": "api",
+    "title": "Payment webhook verifies the signature",
+    "level": "ok",
+    "d": "The webhook rejects any event whose signature does not match, before reading the body as an event.",
+    "src": "apps/api/src/webhooks/payments.ts:14",
+    "nodes": [
+     "e-wh-pay",
+     "x-pay"
+    ],
+    "confidence": "confirmed"
+   },
+   {
+    "id": "sec-widget-rate-limit",
+    "area": "api",
+    "title": "Public widget endpoint has no rate limit",
+    "level": "medium",
+    "d": "The endpoint the help widget posts to accepts unlimited requests per visitor and per site.",
+    "impact": "A script could flood a team's inbox with tickets, and each one triggers an AI triage call that costs money.",
+    "fix": "Add a per-site and per-IP limit in front of ticket creation, and cap triage calls per account per hour.",
+    "src": "apps/widget/src/main.tsx:12",
+    "refs": [
+     "apps/api/src/tickets/service.ts:22"
+    ],
+    "nodes": [
+     "e-widget",
+     "s-tickets"
+    ],
+    "confidence": "confirmed"
+   },
+   {
+    "id": "sec-headers",
+    "area": "api",
+    "title": "No Content-Security-Policy is set in code",
+    "level": "low",
+    "d": "The API and web app set no Content-Security-Policy header. It may be added by the hosting proxy, which is not in this repository.",
+    "impact": "Without one, an injected script would run with no restriction on where it can send data.",
+    "fix": "Confirm whether the proxy sets the header; if not, add a policy that allows only the app's own scripts.",
+    "src": "apps/web/src/pages/Inbox.tsx:40",
+    "nodes": [
+     "e-inbox"
+    ],
+    "confidence": "needs-check"
+   },
+   {
+    "id": "sec-ai-tool-readonly",
+    "area": "ai",
+    "title": "The AI's only tool reads help articles",
+    "level": "ok",
+    "d": "The reply suggester can call one tool, which searches published help articles. It cannot write data or reach tickets from other accounts.",
+    "src": "apps/api/src/ai/tools/searchArticles.ts:8",
+    "nodes": [
+     "t-kb",
+     "a-suggest",
+     "d-articles"
+    ],
+    "confidence": "confirmed"
+   },
+   {
+    "id": "sec-ai-customer-text",
+    "area": "ai",
+    "title": "Customer text reaches the prompt unchanged",
+    "level": "low",
+    "d": "The customer's message is placed in the prompt as written. The draft is shown to an agent, who must send it; nothing is sent automatically.",
+    "impact": "A customer could write text that steers the draft. The agent review step limits the effect to a misleading suggestion.",
+    "fix": "Keep the review step mandatory and mark customer text clearly as quoted material in the prompt.",
+    "src": "apps/api/src/ai/prompts/suggest.ts:5",
+    "nodes": [
+     "a-suggest",
+     "s-reply"
+    ],
+    "confidence": "confirmed"
+   },
+   {
+    "id": "sec-digest-content",
+    "area": "data",
+    "title": "Digest emails include ticket subjects",
+    "level": "info",
+    "d": "The daily digest lists open ticket subjects in the email body, so that text leaves the system through the email provider.",
+    "impact": "Ticket subjects can contain customer details that then sit in inboxes outside the product.",
+    "fix": "Offer a setting that sends counts only, with a link back to the inbox.",
+    "src": "apps/api/src/jobs/digest.ts:9",
+    "nodes": [
+     "c-digest",
+     "x-mail"
+    ],
+    "confidence": "confirmed"
+   }
+  ],
+  "notCovered": [
+   "Dependency vulnerabilities: no audit was run.",
+   "Settings held outside the repository, such as proxy headers and provider dashboards.",
+   "Behaviour of the running system under load or attack."
+  ]
  }
 }

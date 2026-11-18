@@ -12,7 +12,7 @@ metadata:
 
 # Map a repository's architecture
 
-Produce one interactive page that explains a codebase to someone who has never seen it. The page has six linked views (Overview, Complete, AI, Business, Features & Functions, User Journeys) and an Ask Claude chat that answers from the map.
+Produce one interactive page that explains a codebase to someone who has never seen it. The page has eight linked views (Overview, Complete, AI, Business, Features & Functions, User Journeys, Tech Stack, Security Review) and an Ask Claude chat that answers from the map.
 
 The page itself already exists: `template/explorer.html` in this plugin. The work is to scan the repository, write the map **data**, and run it through the plugin's scripts. Never hand-write or restyle the page.
 
@@ -45,6 +45,8 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.cjs"
 ### 2. Scan
 
 Follow `references/scan-method.md`. In short: find how the system is entered, what it calls, where data lives, what it depends on outside, where AI runs, what runs on a schedule; then the product features, the roles, and the end-to-end journeys. Record a `file:line` for everything. Note what was confirmed in code, what was only documented, and what was inferred.
+
+The last two steps of the method are the tech stack inventory and the security review. The security review is a static read of the code: it never runs, probes or queries anything, and every finding must be one you confirmed by opening the cited lines.
 
 Read only what is needed to understand the structure. For a large repository, delegate broad read-only searches to subagents and keep the conclusions.
 
@@ -92,6 +94,7 @@ Lead with the link. Then, briefly:
 
 - what was checked (validator result, smoke result, whether pictures were looked at) and what was not (the live chat is never exercised by the scripts);
 - the three to six findings a newcomer most needs (surprises, dead code, duplicated paths, flagged features);
+- the security findings at medium or above, each in one line with its file, and a plain statement that this was a static review, not a penetration test;
 - the limits of the map (what was grouped, left out, inferred).
 
 ## Updating an existing map
@@ -109,6 +112,8 @@ Pages built before this plugin hold their data as code rather than JSON and cann
 - Do not skip validation because the data "looks right".
 - Do not claim a view was looked at when only the scripts ran.
 - Do not publish a map that contains anything from the "nothing sensitive" list, even if the validator missed it.
+- Do not report a security finding you have not confirmed in the code, and do not write how to exploit one. A wrong alarm costs the reader more than a missed low-level item.
+- Do not put security review content anywhere but the owner's private artifact and your report to them: no screenshots or excerpts in shared or public places unless they ask.
 
 ## References
 

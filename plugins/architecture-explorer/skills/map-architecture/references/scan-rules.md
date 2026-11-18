@@ -44,3 +44,12 @@ Never put any of these into `architecture.json`, the page, or the report:
 - Without the Artifact tool, write a local self-contained file outside the repository.
 - Never say an artifact was created when only a local file was written.
 - Working files (data, page, pictures) stay outside the repository. Temporary folders can be cleared between sessions; the published artifact is the durable copy and `extract.cjs` recovers the data from it.
+
+## Security review
+
+- It is a review for the system's owner, not an attack. Describe the weakness, its impact and the fix. Never write exploit code or step-by-step attack instructions.
+- Static only: do not run the application, send requests to it, query its database, or run scanners or audit tools.
+- Evidence is a file and line. If a secret is hardcoded, report where it is and what kind it is, never its value.
+- Report only what you confirmed in code. Mark anything that depends on settings outside the repository as needing a check.
+- The findings belong to the owner. They go into the private artifact and your report to the owner, nowhere else.
+

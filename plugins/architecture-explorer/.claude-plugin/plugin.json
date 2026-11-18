@@ -1,7 +1,7 @@
 {
   "name": "architecture-explorer",
-  "version": "0.2.0",
-  "description": "Scans a code repository read-only and builds an interactive architecture map: a system overview, the full component graph, AI and business views, features and functions, user journeys, and an Ask Claude chat. Ships with its own design system, checking tools and onboarding.",
+  "version": "0.3.0",
+  "description": "Scans a code repository read-only and builds an interactive architecture map: a system overview, the full component graph, AI and business views, features and functions, user journeys, the tech stack, a static security review, and an Ask Claude chat. Ships with its own design system, checking tools and onboarding.",
   "author": {
     "name": "NEXLOR"
   },

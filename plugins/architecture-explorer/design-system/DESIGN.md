@@ -6,7 +6,7 @@ The explorer is a working tool for reading a system, not a poster. Everything be
 
 ## Principles
 
-1. **One page, six views, one vocabulary.** A component looks the same in every view. A colour, a dashed outline or a chip means the same thing wherever it appears.
+1. **One page, eight views, one vocabulary.** A component looks the same in every view. A colour, a dashed outline or a chip means the same thing wherever it appears.
 2. **Colour is information.** Colour says what kind of thing an item is. It is never decoration.
 3. **Detail on demand.** The canvas shows names and structure. Descriptions, rules and source references live in the details panel, one click away.
 4. **Honest about gaps.** What was not traced in code is drawn differently (dashed) and what is unknown is written as "Not identified". Nothing is filled in to look complete.
@@ -100,6 +100,20 @@ Function names on cards and in panel titles are set in the monospace face so the
 
 **Journey step.** 250 by 50, shaped by type: rectangle with square corners for a screen, hexagon for a decision, pill for success and error, rounded rectangle for everything else. The main path runs down the left column; branches sit in a second column beside the step they leave.
 
+**Technology card** (Tech Stack). 260 by 70, four to a row, one row group per layer. Border and dot take a kind colour by layer, in a fixed order, so a layer reads as one band. Lines: name, then version and role, then what it does here.
+
+**Security card** (Security Review). 340 by 70, three to a row, one row group per area, most serious first. Colour is the level, from tokens that already exist:
+
+| Level | Token | Reads as |
+|---|---|---|
+| critical, high | `--c-err` | red |
+| medium | `--c-cron` | orange |
+| low | `--c-store` | yellow |
+| info | `--c-external` | grey |
+| control in place | `--c-ok` | green |
+
+Level is never shown by colour alone: the second line of every card and the first column of every list row say it in words. A dashed outline means the item needs checking outside the repository, the same meaning a dashed outline has everywhere else: not settled by the code.
+
 **Lines.**
 
 | Where | Meaning | Drawn as |
@@ -116,6 +130,8 @@ Function names on cards and in panel titles are set in the monospace face so the
 Overview lines never pass through a block. Links that skip the middle column run over the top or under the bottom; two non-adjacent blocks in one column are joined by a loop through the gap beside them. Lane order is chosen to minimise crossings.
 
 **Chips.** Small rounded labels. A chip with a coloured dot is a link to that item in its own view. A chip without a dot is a plain fact.
+
+**Toolbar.** Two rows: the view tabs on the first, then filters, search and Clear selection on the second.
 
 **Pills.** Filters in the toolbar, each with a count. Pressed pills take the text colour as their border.
 

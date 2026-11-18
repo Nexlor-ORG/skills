@@ -26,6 +26,7 @@ async function body() {
   FEATS.forEach(f => { xPick(f.id); snap('feature-' + f.id); nav(T0({ crumb: 'home' })); });
   setView('jour'); snap('journeys');
   JOURS.forEach(j => { xPick(j.id); snap('journey-' + j.id); nav(T0({ crumb: 'home' })); });
+  [['tech', 'tech-stack'], ['sec', 'security-review']].forEach(([v, name]) => { if (!VIEW_OFF.has(v)) { setView(v); snap(name); } });
   await null; await null; await null;
   chatOpen(true); const empty = chatLog.innerHTML;
   await chatSend('An example question');
