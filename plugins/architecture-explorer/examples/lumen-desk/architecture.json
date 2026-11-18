@@ -1,0 +1,293 @@
+{
+ "version": 1,
+ "project": {
+  "name": "Lumen Desk",
+  "slug": "lumen-desk",
+  "tagline": "A made-up help desk product used as the sample map: customers ask questions in a widget, agents answer from an inbox with AI-drafted replies.",
+  "summary": "A web app and an embeddable widget in front of one API server and a Postgres database. AI replies run through a single assistant endpoint that calls a hosted model. Payments and email go through outside providers.",
+  "date": "2026-01-15"
+ },
+ "topIntegrations": ["Anthropic API", "Payment provider", "Email provider"],
+ "chat": {
+  "starters": [
+   "How does a customer question reach an agent?",
+   "Where does AI run, and what can it look up?",
+   "What happens when a team upgrades its plan?",
+   "What can an admin do that an agent cannot?"
+  ]
+ },
+ "graph": {
+  "nodes": [
+   {"id": "e-widget", "label": "Help Widget", "kind": "entry", "sub": "/widget · embeddable", "group": "Support", "v": "biz", "sourceRef": "apps/widget/src/main.tsx:12",
+    "detail": "A small form customers open from the product's own website. It collects an email address and a question and posts them to the API.",
+    "why": "The front door for every customer question."},
+   {"id": "e-inbox", "label": "Agent Inbox", "kind": "entry", "sub": "/inbox", "group": "Support", "v": "both", "sourceRef": "apps/web/src/pages/Inbox.tsx:40",
+    "detail": "Where support agents see open tickets, read the conversation, ask for a suggested reply, answer and close.",
+    "why": "The screen agents work in all day."},
+   {"id": "e-signin", "label": "Sign-in", "kind": "entry", "sub": "/login", "group": "Accounts", "v": "biz", "sourceRef": "apps/web/src/pages/Login.tsx:18",
+    "detail": "Email and password sign-in for agents and admins.",
+    "why": "Keeps customer conversations private to the team."},
+   {"id": "e-billing", "label": "Billing page", "kind": "entry", "sub": "/settings/billing", "group": "Billing", "v": "biz", "sourceRef": "apps/web/src/pages/Billing.tsx:27",
+    "detail": "Shows the current plan and seat count. Admins start a checkout to change either.",
+    "why": "Self-serve upgrades."},
+   {"id": "e-wh-pay", "label": "Payment Webhook", "kind": "entry", "sub": "POST /api/webhooks/payments", "group": "Billing", "v": "biz", "status": "documented", "sourceRef": "apps/api/src/webhooks/payments.ts:14",
+    "detail": "Receives payment and subscription events, verifies the signature and updates the team's plan.",
+    "why": "The plan a team sees always matches what it paid for."},
+   {"id": "c-digest", "label": "Daily Digest Job", "kind": "cron", "sub": "cron · 08:00 daily", "group": "Notifications", "v": "biz", "sourceRef": "apps/api/src/jobs/digest.ts:9",
+    "detail": "Each morning it finds tickets that have waited more than a day and queues one summary email per agent.",
+    "why": "Nothing sits unanswered without someone being told."},
+   {"id": "s-auth", "label": "Session Service", "kind": "service", "sub": "auth middleware", "group": "Accounts", "v": "biz", "sourceRef": "apps/api/src/auth/session.ts:31",
+    "detail": "Checks the session on every request and loads the user's team and role.",
+    "why": "One place decides who is allowed in."},
+   {"id": "s-tickets", "label": "Ticket Service", "kind": "service", "sub": "create · assign · close", "group": "Support", "v": "both", "sourceRef": "apps/api/src/tickets/service.ts:22",
+    "detail": "Creates tickets from the widget, stores every message, assigns an owner and closes tickets. Asks the triage agent to label each new ticket.",
+    "why": "The core record of every customer conversation."},
+   {"id": "s-reply", "label": "Reply Assistant API", "kind": "service", "sub": "POST /api/ai/suggest", "group": "AI", "v": "ai", "sourceRef": "apps/api/src/ai/suggest.ts:18",
+    "detail": "The only endpoint that talks to the model. It loads the conversation, runs the suggestion prompt and returns a draft. The API key stays on the server.",
+    "why": "Keeps AI in one reviewable place."},
+   {"id": "s-billing", "label": "Billing Service", "kind": "service", "sub": "plans · seats", "group": "Billing", "v": "biz", "sourceRef": "apps/api/src/billing/service.ts:40",
+    "detail": "Reads the team's plan and opens a checkout session with the payment provider.",
+    "why": "Turns a plan change into a payment."},
+   {"id": "s-notify", "label": "Notification Service", "kind": "service", "sub": "email queue", "group": "Notifications", "v": "biz", "sourceRef": "apps/api/src/notify/queue.ts:15",
+    "detail": "Queues and sends email: replies to customers and the daily digest to agents.",
+    "why": "How the product reaches people outside the app."},
+   {"id": "a-suggest", "label": "Reply Suggester", "kind": "agent", "sub": "suggest-reply prompt", "group": "AI", "v": "ai", "sourceRef": "apps/api/src/ai/prompts/suggest.ts:5",
+    "detail": "Drafts a reply from the conversation so far. It may search the help articles first and is told to say when no article covers the question.",
+    "why": "Agents start from a draft instead of a blank box."},
+   {"id": "a-triage", "label": "Ticket Triage", "kind": "agent", "sub": "classify-ticket prompt", "group": "AI", "v": "ai", "sourceRef": "apps/api/src/ai/prompts/triage.ts:5",
+    "detail": "Labels each new ticket with a topic and an urgency so the inbox can sort it.",
+    "why": "Urgent questions rise to the top without anyone reading them first."},
+   {"id": "m-main", "label": "Claude Sonnet", "kind": "model", "sub": "Anthropic · drafting", "group": "AI", "v": "ai", "sourceRef": "apps/api/src/ai/client.ts:11",
+    "detail": "The one model both prompts use.",
+    "why": "A single model keeps cost and behaviour predictable."},
+   {"id": "t-kb", "label": "Search Help Articles", "kind": "tool", "sub": "search_articles", "group": "AI", "v": "ai", "sourceRef": "apps/api/src/ai/tools/searchArticles.ts:8",
+    "detail": "A tool the reply suggester can call to find help articles that match the question.",
+    "why": "Grounds drafts in what the team has already written."},
+   {"id": "d-tickets", "label": "Tickets", "kind": "store", "sub": "tickets · messages", "group": "Support", "v": "both", "sourceRef": "db/migrations/0003_tickets.sql",
+    "detail": "Postgres tables for tickets and their messages, with the topic, urgency, owner and status of each ticket.",
+    "why": "The history of every conversation."},
+   {"id": "d-accounts", "label": "Accounts", "kind": "store", "sub": "users · teams · plans", "group": "Accounts", "v": "biz", "sourceRef": "db/migrations/0001_accounts.sql",
+    "detail": "Postgres tables for users, teams, roles and each team's plan.",
+    "why": "Who is on which team, and what the team pays for."},
+   {"id": "d-articles", "label": "Help Articles", "kind": "store", "sub": "articles · search index", "group": "Knowledge", "v": "both", "sourceRef": "db/migrations/0005_articles.sql",
+    "detail": "Help articles written by the team, with a search index over their text.",
+    "why": "The knowledge the AI is allowed to draw on."},
+   {"id": "x-llm", "label": "Anthropic API", "kind": "external", "sub": "messages", "group": "AI", "v": "ai", "sourceRef": "apps/api/src/ai/client.ts:11",
+    "detail": "Hosted model API, reached only from the reply assistant endpoint.",
+    "why": "Provides the model."},
+   {"id": "x-pay", "label": "Payment Provider", "kind": "external", "sub": "checkout · webhooks", "group": "Billing", "v": "biz", "sourceRef": "apps/api/src/billing/provider.ts:6",
+    "detail": "Hosted checkout and subscription billing. Always called from the server.",
+    "why": "Takes the money and is the source of truth for plans."},
+   {"id": "x-mail", "label": "Email Provider", "kind": "external", "sub": "transactional email", "group": "Notifications", "v": "biz", "sourceRef": "apps/api/src/notify/provider.ts:6",
+    "detail": "Delivers every email the product sends.",
+    "why": "Reliable delivery without running a mail server."}
+  ],
+  "edges": [
+   {"from": "e-widget", "to": "s-tickets", "kind": "calls", "label": "Customer submits a question"},
+   {"from": "e-inbox", "to": "s-auth", "kind": "calls", "label": "Every page checks the session"},
+   {"from": "e-signin", "to": "s-auth", "kind": "calls", "label": "Email and password sign-in"},
+   {"from": "s-auth", "to": "d-accounts", "kind": "reads", "label": "Look up the user, team and role"},
+   {"from": "e-inbox", "to": "s-tickets", "kind": "calls", "label": "List, assign, reply and close"},
+   {"from": "s-tickets", "to": "d-tickets", "kind": "writes", "label": "Save tickets and messages"},
+   {"from": "s-tickets", "to": "a-triage", "kind": "triggers", "label": "Label each new ticket"},
+   {"from": "e-inbox", "to": "s-reply", "kind": "calls", "label": "Ask for a suggested reply"},
+   {"from": "s-reply", "to": "a-suggest", "kind": "triggers", "label": "Run the suggestion prompt"},
+   {"from": "s-reply", "to": "d-tickets", "kind": "reads", "label": "Load the conversation so far"},
+   {"from": "s-reply", "to": "x-llm", "kind": "calls", "label": "Send the prompt, receive the draft"},
+   {"from": "a-suggest", "to": "m-main", "kind": "calls", "label": "Draft the reply"},
+   {"from": "a-triage", "to": "m-main", "kind": "calls", "label": "Classify topic and urgency"},
+   {"from": "a-suggest", "to": "t-kb", "kind": "calls", "label": "Look up matching help articles"},
+   {"from": "t-kb", "to": "d-articles", "kind": "reads", "label": "Search article text"},
+   {"from": "e-billing", "to": "s-billing", "kind": "calls", "label": "Change plan or seats"},
+   {"from": "s-billing", "to": "x-pay", "kind": "calls", "label": "Open a checkout session"},
+   {"from": "s-billing", "to": "d-accounts", "kind": "reads", "label": "Read the current plan"},
+   {"from": "x-pay", "to": "e-wh-pay", "kind": "triggers", "label": "Payment and subscription events", "status": "documented"},
+   {"from": "e-wh-pay", "to": "d-accounts", "kind": "writes", "label": "Update the team's plan"},
+   {"from": "c-digest", "to": "d-tickets", "kind": "reads", "label": "Find tickets waiting over a day"},
+   {"from": "c-digest", "to": "s-notify", "kind": "calls", "label": "Queue one digest per agent"},
+   {"from": "s-tickets", "to": "s-notify", "kind": "calls", "label": "Email the customer when an agent replies"},
+   {"from": "s-notify", "to": "x-mail", "kind": "calls", "label": "Send the email"}
+  ]
+ },
+ "flows": [
+  {"name": "Answer a customer question", "desc": "Widget, ticket, triage, AI draft, reply by email.",
+   "nodes": ["e-widget", "s-tickets", "d-tickets", "a-triage", "e-inbox", "s-reply", "a-suggest", "t-kb", "d-articles", "m-main", "x-llm", "s-notify", "x-mail"]},
+  {"name": "Upgrade a plan", "desc": "Billing page, checkout, webhook, plan updated.",
+   "nodes": ["e-billing", "s-billing", "x-pay", "e-wh-pay", "d-accounts"]}
+ ],
+ "notes": [
+  ["This is sample data.", "Lumen Desk does not exist. The map shows what a finished scan looks like and is used to test the plugin."],
+  ["One AI endpoint.", "Both prompts run through the reply assistant endpoint; nothing else holds the model key."],
+  ["The webhook is taken from docs.", "The dashed outline marks a component described in documentation that was not traced in code."]
+ ],
+ "roles": [
+  {"id": "customer", "name": "Customer", "basis": "persona", "d": "Someone using the product that Lumen Desk supports. They have no account.",
+   "goals": "Get a question answered.", "can": "Send a question through the widget and reply by email.", "cannot": "See other customers' tickets or sign in.",
+   "entry": "/widget", "src": ["apps/widget/src/main.tsx:12"]},
+  {"id": "agent", "name": "Agent", "basis": "role", "d": "Team role \"agent\". Answers tickets.",
+   "goals": "Clear the inbox with accurate replies.", "can": "Read, assign, answer and close tickets; ask for AI drafts.", "cannot": "Change the plan or invite people.",
+   "entry": "/inbox", "src": ["apps/api/src/auth/roles.ts:4"]},
+  {"id": "admin", "name": "Admin", "basis": "role", "d": "Team role \"admin\". Owns the workspace.",
+   "goals": "Keep the team staffed and the plan paid.", "can": "Everything an agent can, plus billing and team settings.", "cannot": "Nothing inside the team is closed to them.",
+   "entry": "/inbox", "src": ["apps/api/src/auth/roles.ts:4"]}
+ ],
+ "features": [
+  {"id": "f-tickets", "name": "Ticket Inbox", "dom": "Support", "aud": "user",
+   "d": "Receives customer questions and gives agents one place to answer them.",
+   "why": "Every question gets an owner and an answer.",
+   "roles": ["agent", "admin"], "entry": ["/widget", "/inbox"],
+   "rules": ["A ticket needs a valid email address.", "Each new ticket is labelled with a topic and an urgency.", "Replying emails the customer."],
+   "deps": ["f-accounts"], "src": ["apps/api/src/tickets/service.ts:22", "apps/web/src/pages/Inbox.tsx:40"],
+   "subs": [
+    {"id": "tk-intake", "name": "Receive questions", "d": "Turns a widget submission into a labelled ticket.",
+     "functions": [
+      {"id": "fn-ticket-create", "name": "createTicket", "d": "Validates the email and stores the ticket and first message.", "src": "apps/api/src/tickets/service.ts:22",
+       "trig": "Widget form submit", "in": "email, question", "out": "ticket id", "rules": ["Rejects an invalid email address."], "tables": ["tickets", "messages"],
+       "calls": ["fn-triage"], "nodes": ["e-widget", "s-tickets", "d-tickets"]},
+      {"id": "fn-triage", "name": "classifyTicket", "d": "Asks the triage agent for a topic and an urgency.", "src": "apps/api/src/tickets/triage.ts:10",
+       "trig": "After a ticket is created", "in": "question text", "out": "topic, urgency", "tables": ["tickets"],
+       "nodes": ["s-tickets", "a-triage", "m-main"], "ai": "a-triage"}
+     ]},
+    {"id": "tk-reply", "name": "Reply and close", "d": "Sends the agent's answer and closes the ticket when it is solved.",
+     "functions": [
+      {"id": "fn-reply", "name": "sendReply", "d": "Stores the reply and emails it to the customer.", "src": "apps/api/src/tickets/reply.ts:14",
+       "trig": "Send in the inbox", "in": "ticket id, reply text", "out": "message id", "tables": ["messages"], "calls": ["fn-notify"], "nodes": ["e-inbox", "s-tickets", "d-tickets", "s-notify"]},
+      {"id": "fn-close", "name": "closeTicket", "d": "Marks the ticket solved.", "src": "apps/api/src/tickets/service.ts:88",
+       "trig": "Close in the inbox", "in": "ticket id", "out": "status", "tables": ["tickets"], "nodes": ["s-tickets", "d-tickets"]}
+     ]}
+   ]},
+  {"id": "f-ai", "name": "Suggested Replies", "dom": "AI", "aud": "user",
+   "d": "Drafts a reply for the agent to edit, using the conversation and the team's help articles.",
+   "why": "Faster, more consistent answers.",
+   "roles": ["agent", "admin"], "entry": ["/inbox"],
+   "rules": ["The draft is never sent without an agent pressing Send.", "The assistant must say when no help article covers the question."],
+   "deps": ["f-tickets"], "src": ["apps/api/src/ai/suggest.ts:18"],
+   "subs": [
+    {"id": "ai-draft", "name": "Draft a reply", "d": "Produces a draft the agent can edit.",
+     "functions": [
+      {"id": "fn-suggest", "name": "suggestReply", "d": "Loads the conversation and runs the suggestion prompt.", "src": "apps/api/src/ai/suggest.ts:18",
+       "trig": "Suggest reply in the inbox", "in": "ticket id", "out": "draft text", "tables": ["messages"], "calls": ["fn-kb-search"],
+       "nodes": ["e-inbox", "s-reply", "a-suggest", "m-main", "x-llm", "d-tickets"], "ai": "a-suggest"},
+      {"id": "fn-kb-search", "name": "searchArticles", "d": "Finds help articles that match the question.", "src": "apps/api/src/ai/tools/searchArticles.ts:8",
+       "trig": "Called by the model as a tool", "in": "search text", "out": "up to 5 articles", "tables": ["articles"], "nodes": ["t-kb", "d-articles"]}
+     ]}
+   ]},
+  {"id": "f-accounts", "name": "Accounts & Billing", "dom": "Account", "aud": "admin",
+   "d": "Sign-in, team roles and the plan the team pays for.",
+   "why": "Only the team sees its tickets, and the plan stays paid.",
+   "roles": ["agent", "admin"], "entry": ["/login", "/settings/billing"],
+   "rules": ["Only admins can open the billing page.", "The plan changes when the payment provider confirms it, not when checkout opens."],
+   "deps": [], "src": ["apps/api/src/auth/session.ts:31", "apps/api/src/billing/service.ts:40"],
+   "subs": [
+    {"id": "ac-signin", "name": "Sign in", "d": "Checks credentials and starts a session.",
+     "functions": [
+      {"id": "fn-signin", "name": "signIn", "d": "Verifies email and password and loads the team and role.", "src": "apps/api/src/auth/session.ts:31",
+       "trig": "Sign-in form submit", "in": "email, password", "out": "session", "tables": ["users", "teams"], "nodes": ["e-signin", "s-auth", "d-accounts"]}
+     ]},
+    {"id": "ac-plan", "name": "Change the plan", "d": "Starts a checkout and applies the result.",
+     "functions": [
+      {"id": "fn-checkout", "name": "startCheckout", "d": "Opens a checkout session for the chosen plan and seats.", "src": "apps/api/src/billing/service.ts:40",
+       "trig": "Upgrade on the billing page", "in": "plan, seats", "out": "checkout link", "tables": ["teams"], "nodes": ["e-billing", "s-billing", "x-pay", "d-accounts"]},
+      {"id": "fn-pay-webhook", "name": "handlePaymentEvent", "d": "Applies a confirmed payment to the team's plan.", "src": "apps/api/src/webhooks/payments.ts:14",
+       "trig": "Event from the payment provider", "in": "signed event", "out": "plan updated", "rules": ["Events with a bad signature are rejected."], "tables": ["teams"],
+       "nodes": ["e-wh-pay", "d-accounts"], "status": "partial"}
+     ]}
+   ]},
+  {"id": "f-digest", "name": "Daily Digest", "dom": "Notifications", "aud": "internal",
+   "d": "A morning email to each agent listing tickets that have waited more than a day.",
+   "why": "Old tickets do not get forgotten.",
+   "roles": ["agent"], "entry": ["Scheduled, 08:00 daily"],
+   "rules": ["No email is sent to an agent with nothing waiting."],
+   "deps": ["f-tickets"], "src": ["apps/api/src/jobs/digest.ts:9"],
+   "subs": [
+    {"id": "dg-send", "name": "Build and send", "d": "Finds waiting tickets and emails a summary.",
+     "functions": [
+      {"id": "fn-digest", "name": "buildDigest", "d": "Groups waiting tickets by owner and queues one email each.", "src": "apps/api/src/jobs/digest.ts:9",
+       "trig": "Cron, 08:00 daily", "in": "none", "out": "queued emails", "tables": ["tickets"], "calls": ["fn-notify"], "nodes": ["c-digest", "d-tickets", "s-notify"]},
+      {"id": "fn-notify", "name": "sendEmail", "d": "Hands one email to the email provider.", "src": "apps/api/src/notify/queue.ts:15",
+       "trig": "A queued email is due", "in": "recipient, template, data", "out": "delivery id", "nodes": ["s-notify", "x-mail"]}
+     ]}
+   ]}
+ ],
+ "featureNotes": [
+  ["Features are product areas, not folders.", "Each one is something a person would name when describing what the product does."],
+  ["Partial means not fully wired.", "handlePaymentEvent is marked partial because the sample pretends the webhook was only found in documentation."]
+ ],
+ "userJourneys": [
+  {"id": "j-ask", "name": "Ask a question", "role": "customer", "dom": "Support", "outcome": "The question is with the support team",
+   "d": "A customer opens the widget, describes the problem and gets a confirmation.",
+   "steps": [
+    {"id": "q-open", "n": "Open the help widget", "t": "screen", "d": "The widget opens over the product's own page.", "ui": "/widget", "src": "apps/widget/src/main.tsx:12", "f": "f-tickets", "nodes": ["e-widget"], "next": ["q-write"]},
+    {"id": "q-write", "n": "Describe the problem", "t": "action", "d": "The customer types an email address and a question.", "src": "apps/widget/src/Form.tsx:20", "f": "f-tickets", "next": ["q-valid"]},
+    {"id": "q-valid", "n": "Email address valid?", "t": "decision", "d": "The API checks the address before storing anything.", "src": "apps/api/src/tickets/service.ts:26", "f": "f-tickets", "fns": ["fn-ticket-create"], "lbl": "Yes", "next": ["q-create"], "err": [["q-bad", "No"]]},
+    {"id": "q-bad", "n": "Ask for a valid email", "t": "error", "col": 1, "d": "The form shows the problem and keeps the question.", "src": "apps/widget/src/Form.tsx:44", "f": "f-tickets", "next": ["q-write"]},
+    {"id": "q-create", "n": "Ticket created", "t": "system", "d": "The ticket and first message are stored.", "src": "apps/api/src/tickets/service.ts:22", "f": "f-tickets", "fns": ["fn-ticket-create"], "next": ["q-label"]},
+    {"id": "q-label", "n": "Ticket labelled", "t": "ai", "d": "The triage agent adds a topic and an urgency.", "src": "apps/api/src/tickets/triage.ts:10", "f": "f-tickets", "fns": ["fn-triage"], "next": ["q-done"]},
+    {"id": "q-done", "n": "Question received", "t": "success", "d": "The widget confirms and says a reply will come by email.", "src": "apps/widget/src/Done.tsx:8", "f": "f-tickets"}
+   ]},
+  {"id": "j-reply", "name": "Reply with AI help", "role": "agent", "also": ["admin"], "dom": "Support", "outcome": "The customer has an answer and the ticket is closed",
+   "d": "An agent opens a ticket, asks for a draft, edits it, sends it and closes the ticket.",
+   "steps": [
+    {"id": "r-open", "n": "Open a ticket", "t": "screen", "d": "The agent picks a ticket from the inbox.", "ui": "/inbox", "src": "apps/web/src/pages/Inbox.tsx:40", "f": "f-tickets", "nodes": ["e-inbox"], "next": ["r-ask"]},
+    {"id": "r-ask", "n": "Ask for a suggestion", "t": "action", "d": "The agent presses Suggest reply.", "src": "apps/web/src/pages/Inbox.tsx:112", "f": "f-ai", "next": ["r-draft"]},
+    {"id": "r-draft", "n": "Draft written", "t": "ai", "d": "The assistant reads the conversation, may search help articles, and writes a draft.", "src": "apps/api/src/ai/suggest.ts:18", "f": "f-ai", "fns": ["fn-suggest", "fn-kb-search"], "next": ["r-edit"], "err": [["r-fail", "AI unavailable"]]},
+    {"id": "r-fail", "n": "Write it by hand", "t": "error", "col": 1, "d": "The inbox says no draft is available and leaves the reply box empty.", "src": "apps/web/src/pages/Inbox.tsx:130", "f": "f-ai", "next": ["r-edit"]},
+    {"id": "r-edit", "n": "Edit the reply", "t": "action", "d": "The agent changes the draft until it is right.", "src": "apps/web/src/components/ReplyBox.tsx:15", "f": "f-tickets", "next": ["r-send"]},
+    {"id": "r-send", "n": "Reply sent", "t": "system", "d": "The reply is stored and emailed to the customer.", "src": "apps/api/src/tickets/reply.ts:14", "f": "f-tickets", "fns": ["fn-reply", "fn-notify"], "next": ["r-solved"]},
+    {"id": "r-solved", "n": "Solved?", "t": "decision", "d": "The agent decides whether the question is answered.", "src": "apps/web/src/pages/Inbox.tsx:150", "f": "f-tickets", "lbl": "Yes", "next": ["r-done"], "alt": [["r-wait", "Not yet"]]},
+    {"id": "r-wait", "n": "Wait for the customer", "t": "screen", "col": 1, "d": "The ticket stays open until the customer answers.", "src": "apps/web/src/pages/Inbox.tsx:158", "f": "f-tickets"},
+    {"id": "r-done", "n": "Ticket closed", "t": "success", "d": "The ticket leaves the open list.", "src": "apps/api/src/tickets/service.ts:88", "f": "f-tickets", "fns": ["fn-close"]}
+   ]},
+  {"id": "j-upgrade", "name": "Upgrade the plan", "role": "admin", "dom": "Account", "outcome": "The team is on the new plan", "status": "partial",
+   "d": "An admin signs in, opens billing, pays at checkout and sees the new plan.",
+   "steps": [
+    {"id": "u-signin", "n": "Sign in", "t": "action", "d": "Email and password.", "ui": "/login", "src": "apps/web/src/pages/Login.tsx:18", "f": "f-accounts", "fns": ["fn-signin"], "next": ["u-open"]},
+    {"id": "u-open", "n": "Open billing", "t": "screen", "d": "Shows the current plan and seats.", "ui": "/settings/billing", "src": "apps/web/src/pages/Billing.tsx:27", "f": "f-accounts", "nodes": ["e-billing"], "next": ["u-pay"]},
+    {"id": "u-pay", "n": "Pay at checkout", "t": "external", "d": "The payment provider's hosted checkout takes the card.", "src": "apps/api/src/billing/service.ts:40", "f": "f-accounts", "fns": ["fn-checkout"], "next": ["u-hook"], "alt": [["u-cancel", "Cancel"]]},
+    {"id": "u-cancel", "n": "Back to billing", "t": "screen", "col": 1, "d": "Nothing changes.", "ui": "/settings/billing", "src": "apps/web/src/pages/Billing.tsx:61", "f": "f-accounts"},
+    {"id": "u-hook", "n": "Plan updated", "t": "system", "d": "The webhook applies the confirmed payment to the team.", "src": "apps/api/src/webhooks/payments.ts:14", "f": "f-accounts", "fns": ["fn-pay-webhook"], "next": ["u-done"]},
+    {"id": "u-done", "n": "New plan active", "t": "success", "d": "The billing page shows the new plan.", "src": "apps/web/src/pages/Billing.tsx:27", "f": "f-accounts"}
+   ]},
+  {"id": "j-digest", "name": "Catch up from the digest", "role": "agent", "dom": "Notifications", "outcome": "Old tickets are back in front of their owner",
+   "d": "The morning job emails each agent their waiting tickets, and the agent opens the inbox from the email.",
+   "steps": [
+    {"id": "g-run", "n": "Digest job runs", "t": "system", "d": "At 08:00 the job looks for tickets waiting more than a day.", "src": "apps/api/src/jobs/digest.ts:9", "f": "f-digest", "fns": ["fn-digest"], "next": ["g-any"]},
+    {"id": "g-any", "n": "Anything waiting?", "t": "decision", "d": "Agents with no waiting tickets are skipped.", "src": "apps/api/src/jobs/digest.ts:24", "f": "f-digest", "lbl": "Yes", "next": ["g-mail"], "alt": [["g-skip", "No"]]},
+    {"id": "g-skip", "n": "No email sent", "t": "system", "col": 1, "d": "Nothing is queued for this agent.", "src": "apps/api/src/jobs/digest.ts:26", "f": "f-digest"},
+    {"id": "g-mail", "n": "Digest delivered", "t": "external", "d": "The email provider delivers the summary.", "src": "apps/api/src/notify/queue.ts:15", "f": "f-digest", "fns": ["fn-notify"], "next": ["g-click"]},
+    {"id": "g-click", "n": "Open the inbox from the email", "t": "action", "d": "The link opens the inbox filtered to waiting tickets.", "src": "apps/web/src/pages/Inbox.tsx:52", "f": "f-tickets", "next": ["g-done"]},
+    {"id": "g-done", "n": "Waiting tickets in view", "t": "success", "d": "The agent sees what needs an answer first.", "src": "apps/web/src/pages/Inbox.tsx:52", "f": "f-tickets"}
+   ]}
+ ],
+ "journeyNotes": [
+  ["Customer is a persona.", "The code has no customer account; the role is inferred from the widget."],
+  ["Branches are real conditions.", "Each decision and error step points at the check that causes it."]
+ ],
+ "overview": {
+  "groups": [["use", "Apps and scheduled jobs"], ["core", "Backend"], ["ext", "Outside services"]],
+  "blocks": [
+   {"id": "ov-widget", "col": 0, "icon": "screen", "k": "entry", "name": "Help widget", "d": "The form customers open on the product's website to ask a question.", "nodes": ["e-widget"]},
+   {"id": "ov-app", "col": 0, "icon": "screen", "k": "entry", "name": "Agent app", "d": "Where agents sign in, answer tickets and admins manage billing.", "nodes": ["e-inbox", "e-signin", "e-billing"]},
+   {"id": "ov-jobs", "col": 0, "icon": "bolt", "k": "cron", "name": "Scheduled jobs", "d": "A morning job that emails each agent their waiting tickets.", "nodes": ["c-digest"]},
+   {"id": "ov-ai", "col": 1, "icon": "spark", "k": "agent", "name": "AI assistant", "d": "One endpoint that drafts replies and labels new tickets, with a tool to search help articles.", "nodes": ["s-reply", "a-suggest", "a-triage", "t-kb"]},
+   {"id": "ov-api", "col": 1, "icon": "server", "k": "service", "name": "API server", "d": "Sessions, tickets, billing, notifications and the payment webhook.", "nodes": ["s-auth", "s-tickets", "s-billing", "s-notify", "e-wh-pay"]},
+   {"id": "ov-db", "col": 1, "icon": "db", "k": "store", "name": "Database", "d": "Postgres: tickets and messages, accounts and plans, and help articles.", "nodes": ["d-tickets", "d-accounts", "d-articles"]},
+   {"id": "ov-llm", "col": 2, "icon": "globe", "k": "external", "name": "Anthropic", "d": "Runs the model behind drafts and ticket labels.", "nodes": ["x-llm", "m-main"]},
+   {"id": "ov-pay", "col": 2, "icon": "globe", "k": "external", "name": "Payment provider", "d": "Hosted checkout and subscription billing.", "nodes": ["x-pay"]},
+   {"id": "ov-mail", "col": 2, "icon": "globe", "k": "external", "name": "Email provider", "d": "Delivers replies to customers and the daily digest.", "nodes": ["x-mail"]}
+  ],
+  "links": [
+   {"a": "ov-widget", "b": "ov-api", "label": "Customers submit questions."},
+   {"a": "ov-app", "b": "ov-api", "label": "Sign-in, tickets and billing."},
+   {"a": "ov-app", "b": "ov-ai", "label": "Agents ask for a suggested reply."},
+   {"a": "ov-jobs", "b": "ov-api", "label": "Queues the daily digest emails."},
+   {"a": "ov-jobs", "b": "ov-db", "label": "Finds tickets waiting over a day."},
+   {"a": "ov-ai", "b": "ov-api", "label": "The ticket service asks for a label on each new ticket."},
+   {"a": "ov-ai", "b": "ov-db", "label": "Reads the conversation and searches help articles."},
+   {"a": "ov-api", "b": "ov-db", "label": "Reads and saves tickets, accounts and plans."},
+   {"a": "ov-ai", "b": "ov-llm", "label": "Sends prompts and receives drafts and labels."},
+   {"a": "ov-api", "b": "ov-pay", "label": "Opens checkout and receives payment events."},
+   {"a": "ov-api", "b": "ov-mail", "label": "Sends replies and digests."}
+  ]
+ }
+}

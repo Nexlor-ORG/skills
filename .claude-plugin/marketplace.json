@@ -1,0 +1,16 @@
+{
+  "name": "nexlor-skills",
+  "owner": {
+    "name": "NEXLOR"
+  },
+  "metadata": {
+    "description": "Claude plugins and skills maintained by NEXLOR."
+  },
+  "plugins": [
+    {
+      "name": "architecture-explorer",
+      "source": "./plugins/architecture-explorer",
+      "description": "Scans a code repository read-only and builds an interactive architecture map: a system overview, the full component graph, AI and business views, features and functions, user journeys, and an Ask Claude chat."
+    }
+  ]
+}
