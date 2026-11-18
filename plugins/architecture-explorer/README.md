@@ -69,3 +69,7 @@ node scripts/smoke.cjs /tmp/lumen-desk.html
 node scripts/snapshot.cjs /tmp/lumen-desk.html /tmp/lumen-desk-shots --png
 node scripts/extract.cjs /tmp/lumen-desk.html /tmp/lumen-desk.json
 ```
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

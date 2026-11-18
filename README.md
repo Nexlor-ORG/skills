@@ -8,7 +8,7 @@ Claude plugins and skills maintained by NEXLOR. Each plugin lives in its own fol
 
 ## Installing in Claude Code
 
-This repository is a plugin marketplace. It is private, so you need access to it on GitHub first.
+This repository is a public plugin marketplace, so anyone can add it.
 
 ```
 /plugin marketplace add Nexlor-ORG/skills
@@ -26,3 +26,7 @@ To pick up a new version later:
 1. Create `plugins/<plugin-name>/` with a `.claude-plugin/plugin.json` and its `skills/`.
 2. Add an entry for it to `.claude-plugin/marketplace.json`.
 3. Run `claude plugin validate .` from the repository root, then `claude plugin validate plugins/<plugin-name>`.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
